@@ -1,3 +1,9 @@
 [submodule "Rad-Seq"]
 	path = Rad-Seq
 	url = https://github.com/AndersenLab/Rad-Seq
+[submodule "HTA_Linkage"]
+	path = HTA_Linkage
+	url = https://github.com/AndersenLab/HTA_Linkage
+[submodule "N2xCB4856-RIAILS"]
+	path = N2xCB4856-RIAILS
+	url = https://github.com/AndersenLab/N2xCB4856-RIAILS
