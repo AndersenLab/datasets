@@ -1,0 +1,3 @@
+[submodule "Rad-Seq"]
+	path = Rad-Seq
+	url = https://github.com/AndersenLab/Rad-Seq
