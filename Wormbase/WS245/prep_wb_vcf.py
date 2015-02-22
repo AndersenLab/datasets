@@ -1,8 +1,8 @@
 import os, gzip
 
-if not os.path.isfile("c_elegans.WS245.annotations.gff3.gz"):
-	print "Downloading Annotation File"
-	os.system("curl 'ftp://ftp.wormbase.org/pub/wormbase/releases/WS245/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WS245.annotations.gff3.gz' > c_elegans.WS245.annotations.gff3.gz")
+#if not os.path.isfile("c_elegans.WS245.annotations.gff3.gz"):
+#	print "Downloading Annotation File"
+#	os.system("curl 'ftp://ftp.wormbase.org/pub/wormbase/releases/WS245/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.WS245.annotations.gff3.gz' > c_elegans.WS245.annotations.gff3.gz")
 
 acceptable_types = ['SNP', 'point_mutation']
 
@@ -37,14 +37,15 @@ strain_list = ['ED3040', 'ED3042', 'ED3049', 'LKC34', 'JU1401', 'MY1', 'MY6', 'J
 
 
 vcf_header = """##fileformat=VCFv4.1
+##contig=<ID=I,length=15072423>
+##contig=<ID=II,length=15279345>
+##contig=<ID=III,length=13783700>
+##contig=<ID=IV,length=17493793>
+##contig=<ID=V,length=20924149>
+##contig=<ID=X,length=17718866>
+##contig=<ID=MtDNA,length=13794>
+##INFO=<ID=Confirmed,Number=1,Type=String,Description="SNP is Confirmed">
 ##FILTER=<ID=PASS,Description="All filters passed">
-##contig=<ID=CHROMOSOME_I,length=15072423>
-##contig=<ID=CHROMOSOME_II,length=15279345>
-##contig=<ID=CHROMOSOME_III,length=13783700>
-##contig=<ID=CHROMOSOME_IV,length=17493793>
-##contig=<ID=CHROMOSOME_V,length=20924149>
-##contig=<ID=CHROMOSOME_X,length=17718866>
-##contig=<ID=CHROMOSOME_MtDNA,length=13794>
 ##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 """
@@ -60,7 +61,7 @@ def process_genotypes(strains):
 		if i in strains:
 			gt_set.append("1/1:100")
 		else:
-			gt_set.append("0/0:100")
+			gt_set.append("./.:.")
 	return '\t'.join(gt_set)
 
 c = 1
@@ -72,7 +73,7 @@ with gzip.GzipFile("c_elegans.WS245.annotations.gff3.gz") as wb:
 			l = line.strip().split("\t")
 			if l[2] in acceptable_types:
 				info_set = parse_info(l[8])
-				CHROM = "CHROMOSOME_" + l[0]
+				CHROM = l[0]
 				POS = l[3]
 				ID = info_set["variation"]
 				TYPE = l[2]
@@ -81,13 +82,15 @@ with gzip.GzipFile("c_elegans.WS245.annotations.gff3.gz") as wb:
 					if len(variant_strains) > 0:
 						GENOTYPES = process_genotypes(variant_strains)
 						REF, ALT = info_set["substitution"].split("/")
-						vcf_record = "{CHROM}\t{POS}\t{ID}\t{REF}\t{ALT}\t100\t.\t.\tGT:GQ\t{GENOTYPES}\n".format(**locals())
+						INFO = "Confirmed=" + str(l[8].find("Confirmed") > 0)
+						vcf_record = "{CHROM}\t{POS}\t{ID}\t{REF}\t{ALT}\t100\t.\t{INFO}\tGT:GQ\t{GENOTYPES}\n".format(**locals())
 						vcf.write(vcf_record)
 						c += 1
 						if c % 1000 == 0:
 							print "%s records" % c
 			else:
 				pass
+
 
 # Convert to vcf File
 os.system("bcftools view -O z WS245.vcf > WS245.vcf.gz")
